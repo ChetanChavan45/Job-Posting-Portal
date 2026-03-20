@@ -7,7 +7,7 @@ class User(AbstractUser):
         ('employer', 'Employer'),
         ('admin', 'Admin'),
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate', db_index=True)
     
     def __str__(self):
         return self.username

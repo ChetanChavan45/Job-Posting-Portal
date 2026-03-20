@@ -58,12 +58,12 @@ WSGI_APPLICATION = 'job_portal.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'job_portal_db',
-        'USER': 'postgres',
-        'PASSWORD': 'cHETAN123',
+        'USER': 'root',
+        'PASSWORD': 'Chetan123',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '3306',
     }
 }
 

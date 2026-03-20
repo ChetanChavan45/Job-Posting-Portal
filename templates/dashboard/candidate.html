@@ -68,17 +68,20 @@
     }
 
     function renderApplications(data) {
+        const tableContainer = document.querySelector('.table-responsive');
         const tbody = document.getElementById('applications-table-body');
         const emptyState = document.getElementById('empty-applications');
         
         let results = data.results || data;
 
-        if(!results || results.length === 0) {
+        if(!results || !Array.isArray(results) || results.length === 0) {
             tbody.innerHTML = '';
+            tableContainer.classList.add('d-none');
             emptyState.classList.remove('d-none');
             return;
         }
 
+        tableContainer.classList.remove('d-none');
         emptyState.classList.add('d-none');
         
         const html = results.map(app => {

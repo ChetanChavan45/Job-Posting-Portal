@@ -228,7 +228,9 @@
                 const data = await res.json();
                 let results = data.results || data;
                 
-                const html = results.map(job => `
+                const html = (!results || !Array.isArray(results) || results.length === 0) 
+                    ? '<div class="col-12 text-center text-muted p-5">No jobs posted yet.</div>'
+                    : results.map(job => `
                     <div class="col-md-6 mb-3">
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body p-4">
@@ -256,6 +258,11 @@
                 const data = await res.json();
                 let results = data.results || data;
                 
+                if (!results || !Array.isArray(results) || results.length === 0) {
+                    document.getElementById('employer-apps-body').innerHTML = '<tr><td colspan="5" class="text-center text-muted p-5">No applications received yet.</td></tr>';
+                    return;
+                }
+
                 const html = results.map(app => {
                     const options = ['applied', 'shortlisted', 'rejected', 'selected']
                         .map(s => `<option value="${s}" ${app.status === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`)
@@ -280,7 +287,7 @@
                         </td>
                     </tr>`;
                 }).join('');
-                document.getElementById('employer-apps-body').innerHTML = html || '<tr><td colspan="5" class="text-center text-muted p-5">No applications received yet.</td></tr>';
+                document.getElementById('employer-apps-body').innerHTML = html;
             }
         } catch(e) { console.error(e); }
     }

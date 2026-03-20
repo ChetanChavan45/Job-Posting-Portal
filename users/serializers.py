@@ -9,14 +9,20 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'role', 'first_name', 'last_name')
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     email = serializers.EmailField(required=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password', 'role', 'first_name', 'last_name')
+
+    def validate_password(self, value):
+        if len(value) < 4:
+            raise serializers.ValidationError("Password must be at least 4 characters long.")
+        return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():

@@ -9,14 +9,14 @@ class Job(models.Model):
     )
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='jobs')
-    title = models.CharField(max_length=255)
-    company = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, db_index=True)
+    company = models.CharField(max_length=255, db_index=True)
+    location = models.CharField(max_length=255, db_index=True)
     salary = models.CharField(max_length=100)
-    job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES)
+    job_type = models.CharField(max_length=20, choices=JOB_TYPE_CHOICES, db_index=True)
     skills = models.TextField()
     description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"
@@ -33,8 +33,8 @@ class Application(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
     resume = models.FileField(upload_to='resumes/')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='applied')
-    applied_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='applied', db_index=True)
+    applied_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         unique_together = ('user', 'job')
