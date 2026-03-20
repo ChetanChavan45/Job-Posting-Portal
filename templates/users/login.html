@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login - Job Posting Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0 fw-bold">Sign In</h3>
+                    <p class="mb-0 text-white-50">Welcome back to Job Portal</p>
+                </div>
+                <div class="card-body p-5">
+                    <form id="login-form">
+                        <div class="mb-4">
+                            <label for="username" class="form-label fw-semibold">Username</label>
+                            <input type="text" class="form-control form-control-lg bg-light" id="username" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <input type="password" class="form-control form-control-lg bg-light" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">Login</button>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p class="text-muted">Don't have an account? <a href="{% url 'register' %}" class="text-primary fw-bold text-decoration-none">Sign up</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        showLoader();
+        try {
+            const response = await fetch('/api/auth/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                showToast('Login successful!', 'success');
+                
+                setTimeout(() => {
+                    if(data.user.role === 'employer') {
+                        window.location.href = "{% url 'employer_dashboard' %}";
+                    } else if(data.user.role === 'candidate') {
+                        window.location.href = "{% url 'candidate_dashboard' %}";
+                    } else {
+                        window.location.href = "{% url 'home' %}";
+                    }
+                }, 1000);
+            } else {
+                const errorData = await response.json();
+                showToast(errorData.non_field_errors?.[0] || 'Login failed Check credentials.', 'danger');
+            }
+        } catch(err) {
+            console.error(err);
+            showToast('An error occurred during login.', 'danger');
+        } finally {
+            hideLoader();
+        }
+    });
+</script>
+{% endblock %}

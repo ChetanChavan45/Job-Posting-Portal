@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Job Details - Job Posting Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+    <a href="{% url 'job_list' %}" class="btn btn-outline-secondary mb-4"><i class="bi bi-arrow-left me-2"></i>Back to Jobs</a>
+    
+    <div class="row" id="job-detail-container">
+        <!-- Loader Skeleton -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 placeholder-glow">
+                <div class="card-body p-5">
+                    <h2 class="placeholder col-6"></h2>
+                    <p class="placeholder col-4"></p>
+                    <hr>
+                    <span class="placeholder col-12"></span>
+                    <span class="placeholder col-12"></span>
+                    <span class="placeholder col-8"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white py-4">
+        <h5 class="modal-title fw-bold" id="applyModalLabel">Apply for <span id="modal-job-title"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="apply-form">
+          <input type="hidden" id="apply-job-id">
+          
+          <div class="mb-4">
+            <label for="resumeInput" class="form-label fw-semibold">Upload Resume (PDF Only)</label>
+            <input class="form-control form-control-lg" type="file" id="resumeInput" accept="application/pdf" required>
+            <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Max file size: 5MB. Must be .pdf format.</div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">Submit Application <i class="bi bi-send ms-2"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentJobId = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        currentJobId = pathSegments[pathSegments.length - 1];
+        fetchJobDetails(currentJobId);
+
+        document.getElementById('apply-form').addEventListener('submit', submitApplication);
+    });
+
+    async function fetchJobDetails(id) {
+        try {
+            const response = await fetch(`/api/jobs/${id}/`);
+            if(response.ok) {
+                const job = await response.json();
+                renderJobDetails(job);
+            } else {
+                document.getElementById('job-detail-container').innerHTML = `<div class="alert alert-danger w-100">Job not found.</div>`;
+            }
+        } catch(error) {
+            console.error(error);
+            showToast("Error loading details.", "danger");
+        }
+    }
+
+    function renderJobDetails(job) {
+        document.getElementById('modal-job-title').innerText = job.title;
+        document.getElementById('apply-job-id').value = job.id;
+
+        const user = getAuthUser();
+        let applyButtonHtml = '';
+        
+        if(user) {
+            if(user.role === 'candidate') {
+                applyButtonHtml = `<button class="btn btn-primary btn-lg px-5 shadow-sm rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#applyModal">Apply Now <i class="bi bi-box-arrow-up-right ms-2"></i></button>`;
+            } else {
+                applyButtonHtml = `<button class="btn btn-secondary btn-lg px-5 shadow-sm rounded-pill fw-bold" disabled>Employers cannot apply</button>`;
+            }
+        } else {
+            applyButtonHtml = `<a href="${LOGIN_URL}" class="btn btn-outline-primary btn-lg px-5 shadow-sm rounded-pill fw-bold">Login to Apply</a>`;
+        }
+
+        const typeBadge = {
+            'full-time': 'bg-success',
+            'part-time': 'bg-warning text-dark',
+            'internship': 'bg-info text-dark'
+        }[job.job_type] || 'bg-secondary';
+
+        const typeLabel = job.job_type.replace('-', ' ').toUpperCase();
+
+        const skillsArr = job.skills.split(',').map(s => s.trim()).filter(Boolean);
+        const skillsHtml = skillsArr.map(s => `<span class="badge bg-light text-dark border me-2 mb-2 px-3 py-2">${s}</span>`).join('');
+
+        const formattedDate = new Date(job.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        const html = `
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-5">
+                    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+                        <div>
+                            <h1 class="fw-bold mb-2">${job.title}</h1>
+                            <div class="d-flex align-items-center text-muted fs-5">
+                                <i class="bi bi-building me-2"></i><span class="fw-semibold text-dark me-4">${job.company}</span>
+                                <i class="bi bi-geo-alt me-2"></i><span>${job.location}</span>
+                            </div>
+                        </div>
+                        <span class="badge ${typeBadge} px-4 py-2 fs-6 rounded-pill">${typeLabel}</span>
+                    </div>
+                    
+                    <div class="p-4 bg-light rounded-4 mb-4 d-flex justify-content-between text-center flex-wrap gap-3">
+                        <div><small class="text-muted d-block text-uppercase fw-bold mb-1">Salary</small><strong class="fs-5">${job.salary}</strong></div>
+                        <div><small class="text-muted d-block text-uppercase fw-bold mb-1">Posted On</small><strong class="fs-5">${formattedDate}</strong></div>
+                    </div>
+
+                    <h4 class="fw-bold mb-3">Job Description</h4>
+                    <div class="mb-5 lh-lg" style="white-space: pre-line;">${job.description}</div>
+                    
+                    <h4 class="fw-bold mb-3">Required Skills</h4>
+                    <div>${skillsHtml}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 100px;">
+                <div class="card-body p-4 text-center">
+                    <div class="p-4 rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-briefcase text-primary fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">${job.company}</h4>
+                    <p class="text-muted mb-4"><i class="bi bi-geo-alt-fill me-1"></i>${job.location}</p>
+                    <hr class="mb-4">
+                    ${applyButtonHtml}
+                </div>
+            </div>
+        </div>`;
+
+        document.getElementById('job-detail-container').innerHTML = html;
+    }
+
+    async function submitApplication(e) {
+        e.preventDefault();
+        
+        const jobId = document.getElementById('apply-job-id').value;
+        const fileInput = document.getElementById('resumeInput');
+        const token = getToken();
+
+        if(!token) {
+            showToast("Please login first.", "warning");
+            return;
+        }
+
+        if(fileInput.files.length === 0) {
+            showToast("Please select a resume.", "warning");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if(!file.name.toLowerCase().endsWith('.pdf')) {
+            showToast("Only PDF files are allowed.", "danger");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('job', jobId);
+        formData.append('resume', file);
+
+        showLoader();
+        try {
+            const response = await fetch('/api/applications/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'X-CSRFToken': CSRF_TOKEN
+                },
+                body: formData
+            });
+
+            if(response.ok) {
+                const modalEl = document.getElementById('applyModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                showToast("Application submitted successfully! Good luck!", "success");
+            } else {
+                const err = await response.json();
+                let errMsg = "Failed to apply.";
+                if(err.detail) errMsg = err.detail;
+                if(err.resume) errMsg = err.resume[0];
+                showToast(errMsg, "danger");
+            }
+        } catch(error) {
+            console.error(error);
+            showToast("An error occurred.", "danger");
+        } finally {
+            hideLoader();
+        }
+    }
+</script>
+{% endblock %}

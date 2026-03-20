@@ -1,0 +1,59 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$HCkaZB7SymmPeC3SuDOrEo$cNuj+6KPA48DHDfzO6r6eTqGkZe3uNy/GZUJY5h5uqw=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "Chetan12",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin1@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-03-17T03:46:13.296Z",
+      "role": "candidate",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$MgdYZJV86QKTv8rMEPeWxd$JfYorep8PlxZO+aozb6EwC7MnXn4jvt9RtYHDLiSpiM=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin2",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin2@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-03-17T03:49:52.949Z",
+      "role": "candidate",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$vWLatWRDbzEpOJO5Yga6P0$ID+Q5aEh5ZWytFwOxe9NRWe/ggGwT3yz68sRvR7MBbc=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "chetan123",
+      "first_name": "",
+      "last_name": "",
+      "email": "chetan123@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-03-17T05:36:32.527Z",
+      "role": "candidate",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

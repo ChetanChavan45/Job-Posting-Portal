@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Candidate Dashboard - Job Posting Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="display-6 fw-bold">My Applications</h2>
+        <a href="{% url 'job_list' %}" class="btn btn-primary btn-lg shadow-sm"><i class="bi bi-search me-2"></i>Find More Jobs</a>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 px-4 text-uppercase text-muted fs-7">Job Title</th>
+                            <th class="py-3 text-uppercase text-muted fs-7">Company</th>
+                            <th class="py-3 text-uppercase text-muted fs-7">Applied On</th>
+                            <th class="py-3 text-uppercase text-muted fs-7">Status</th>
+                            <th class="py-3 px-4 text-center text-uppercase text-muted fs-7">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Empty State -->
+            <div id="empty-applications" class="text-center p-5 d-none">
+                <div class="display-1 text-muted mb-3"><i class="bi bi-folder-x"></i></div>
+                <h4 class="fw-bold">No applications yet</h4>
+                <p class="text-muted">You haven't applied to any jobs yet. Start exploring!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        requireAuth('candidate');
+        fetchMyApplications();
+    });
+
+    async function fetchMyApplications() {
+        showLoader();
+        const token = getToken();
+        try {
+            const response = await fetch('/api/applications/', {
+                headers: {
+                    'Authorization': `Token ${token}`
+                }
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                renderApplications(data);
+            }
+        } catch(error) {
+            console.error(error);
+            showToast("Failed to load applications.", "danger");
+        } finally {
+            hideLoader();
+        }
+    }
+
+    function renderApplications(data) {
+        const tbody = document.getElementById('applications-table-body');
+        const emptyState = document.getElementById('empty-applications');
+        
+        let results = data.results || data;
+
+        if(!results || results.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.classList.remove('d-none');
+            return;
+        }
+
+        emptyState.classList.add('d-none');
+        
+        const html = results.map(app => {
+            const date = new Date(app.applied_at).toLocaleDateString('en-US');
+            const statusBadgeMap = {
+                'applied': 'bg-secondary',
+                'shortlisted': 'bg-primary',
+                'rejected': 'bg-danger',
+                'selected': 'bg-success'
+            };
+            const badgeClass = statusBadgeMap[app.status] || 'bg-secondary';
+            const statusText = app.status.charAt(0).toUpperCase() + app.status.slice(1);
+            
+            return `
+            <tr>
+                <td class="px-4 py-3 fw-semibold text-dark">${app.job_details.title}</td>
+                <td class="py-3 text-muted"><i class="bi bi-building me-2"></i>${app.job_details.company}</td>
+                <td class="py-3 text-muted">${date}</td>
+                <td class="py-3"><span class="badge ${badgeClass} px-3 py-2 rounded-pill shadow-sm">${statusText}</span></td>
+                <td class="px-4 py-3 text-center">
+                    <a href="/jobs/${app.job}/" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm">View Job</a>
+                </td>
+            </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = html;
+    }
+</script>
+{% endblock %}

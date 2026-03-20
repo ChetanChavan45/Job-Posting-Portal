@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Job Posting Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-white text-center d-flex align-items-center justify-content-center">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4 animate-fade-in">Find Your Dream Job Today</h1>
+        <p class="lead mb-5 animate-slide-up">Thousands of jobs in the fields of software engineering, design, and more.</p>
+        
+        <!-- Search Bar -->
+        <div class="search-box p-4 bg-white rounded shadow-lg animate-slide-up" style="max-width: 800px; margin: 0 auto;">
+            <form id="hero-search-form" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-lg" id="search-keyword" placeholder="Job Title, Keywords or Company">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-lg" id="search-location" placeholder="City or Region">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Jobs Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Latest Jobs</h2>
+            <a href="{% url 'job_list' %}" class="btn btn-outline-primary shadow-sm">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div id="latest-jobs-container" class="row g-4">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</section>
+
+<!-- Call to action -->
+<section class="bg-primary text-white py-5 text-center mt-4 cta-section">
+    <div class="container">
+        <h2 class="fw-bold mb-3">Are you an Employer?</h2>
+        <p class="lead mb-4">Post your open roles and find top talent fast.</p>
+        <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5 fw-bold text-primary">Post a Job</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchJobs();
+        
+        document.getElementById('hero-search-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const keyword = document.getElementById('search-keyword').value;
+            const location = document.getElementById('search-location').value;
+            window.location.href = `${JOBS_URL}?q=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
+        });
+    });
+
+    async function fetchJobs() {
+        showLoader();
+        try {
+            const response = await fetch('/api/jobs/?page_size=6');
+            if(response.ok) {
+                const data = await response.json();
+                renderJobs(data.results, 'latest-jobs-container');
+            }
+        } catch(error) {
+            console.error(error);
+            showToast('Failed to load jobs.', 'danger');
+        } finally {
+            hideLoader();
+        }
+    }
+</script>
+{% endblock %}
